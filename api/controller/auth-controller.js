@@ -6,6 +6,7 @@ const { validationResult } = require("express-validator");
 const AuthModel = require("../models/auth");
 const Cash = require("../models/cash");
 const Order = require("../models/order");
+const Comments = require("../models/comment");
 
 const secretkey = "akjhfwjsefkasecvybeoaljfalkwjf20358128957";
 
@@ -226,6 +227,18 @@ exports.getOrdersByUserId = async (req, res, next) => {
   }
 };
 
+// exports.postuserComment = async (req, res, next) => {
+//   const id = req.userId;
+
+//   try {
+//     const comments = await CommentUser.find({ userId: id }).populate("filmId");
+//     res.json({ comments: comments });
+//   } catch (err) {
+//     console.log(err);
+//     next(err);
+//   }
+// };
+
 exports.getProfileInfo = async (req, res, next) => {
   if (!req.userId) {
     // new Err next(err);
@@ -263,15 +276,13 @@ exports.getProfileInfo = async (req, res, next) => {
 //   }
 // };
 
-
-
 exports.updateProfile = (req, res) => {
   const id = req.body._id;
-  const userdata = req.body
-  
-  console.log(id)
+  const userdata = req.body;
 
-  AuthModel.findByIdAndUpdate(id, { $set:userdata })
+  // console.log(id);
+
+  AuthModel.findByIdAndUpdate(id, { $set: userdata })
     .then((result) => {
       res.json({
         error: false,
@@ -286,3 +297,77 @@ exports.updateProfile = (req, res) => {
       });
     });
 };
+
+exports.postComment = async (req, res, next) => {
+  const idPhim = req.params.id_phim;
+  const content = req.body.content;
+  const userId = req.userId;
+  // console.log(idPhim);
+  // console.log(content);
+  // console.log(userId);
+
+  try {
+    const comments = new Comments({
+      userId: userId,
+      content: content,
+      filmId: idPhim,
+    });
+    const result = await comments.save();
+    res.json(result);
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+};
+
+// exports.getComment = async (req, res, next) => {
+//   const idPhim = req.params.id_phim;
+//   const id = req.userId;
+
+//   try {
+//     const result = await Comments.findById(idPhim);
+
+//     if(id){
+//       const user = await AuthModel.findById(id, "name");
+//       res.json({name: user.name});
+//     }
+//     res.json(result);
+//   } catch (err) {
+//     console.log(err);
+//     next(err);
+//   }
+// };
+
+exports.getComment = async (req, res, next) => {
+  const idPhim = req.params.id_phim_client;
+
+  try {
+    const content = await Comments.find({ filmId: idPhim })
+      .populate("userId", "name")
+      .sort({ commentDate: -1 });
+
+    // const responseComment = { ...content._doc };
+    res.json({ content: content });
+    console.log(content);
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+  // Comments
+  //   .find({filmId: idPhim})
+  //   .populate("userId")
+  //   .then((content) => {
+  //     // console.log(content.userId.name);
+  //     console.log(content);
+  //     res.status(200).json({
+  //       content: content,
+  //     });
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //   });
+};
+
+exports.deleteComment = async (req, res, next) => {
+
+}
